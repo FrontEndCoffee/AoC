@@ -33,10 +33,10 @@ function validateReport(report) {
     console.log('\n\tValidating report: ' + report.join(','))
     if (isReportAscending(report)) {
         console.log('\tReport is ascending')
-        return isReportSteadilyIncreasing(report);
+        return evaluateReport(report, (x,y) => y > x && (y - x) <= 3);
     } else {
         console.log('\tReport is descending')
-        return isReportSteadilyDecreasing(report)
+        return evaluateReport(report, (x,y) => y < x && (x - y) <= 3)
     }
 }
 
@@ -46,70 +46,29 @@ function isReportAscending(report) {
     // However, this will be handled by the isReportSteadilyIncreasing and isReportSteadilyDecreasing functions
     return report[0] < report[1];
 }
-function isReportSteadilyIncreasing(report) {
-    let isDampenerAvailable = true;
-    return report.every((curr, i, arr) => {
-        console.log('\t\tEvaluating ', i)
-        if (i < 2) {
-            console.log('\t\t\tSkipping as it is one of the first two')
-            return true;
+function evaluateReport(report, compareFn) {
+    const firstInvalidLevel = report.findIndex((curr, i, arr) => {
+        if (i === 0) {
+            return false;
         }
-        // We will evaluate elements A,B,C
-        const a = arr[i-2]
-        const b = arr[i-1]
-        const c = curr
-        console.log('\t\t\tEvaluating ', a, b, c)
-
-        const isValid = (x,y) => y > x && (y - x) <= 3
-        if (isValid(a,b) && isValid(b,c)) {
-            console.log('\t\t\t\tValid')
-            return true
-        }
-        if (! isDampenerAvailable) {
-            console.log('\t\t\t\tInvalid, no dampener available')
-            return false
-        }
-        console.log('\t\t\t\tDampener available')
-
-        if (isValid(a,c)) {
-            console.log('\t\t\t\tIs valid, with dampener, using it.')
-            isDampenerAvailable = false
-            return true
-        }
-        console.log('\t\t\t\tInvalid, even with dampener')
-        return false
+        const prev = arr[i-1]
+        return !compareFn(prev, curr)
     })
-}
-function isReportSteadilyDecreasing(report) {
-    let isDampenerAvailable = true;
-    return report.every((curr, i, arr) => {
-        console.log('\t\tEvaluating ', i)
-        if (i < 2) {
-            console.log('\t\t\tSkipping as it is one of the first two')
+    if (firstInvalidLevel === -1) {
+        console.log('\t\tAll levels are valid')
+        return true
+    }
+    // In theory, firstInvalidLevel can never be 0.
+    if (firstInvalidLevel === 0) {
+        throw "WTF this shouldn't happen..."
+    }
+    console.log('\t\tAttempting with dampener')
+    const reportWithoutFirstInvalid = report.filter((_, i) => i !== (firstInvalidLevel-1))
+    return reportWithoutFirstInvalid.every((curr, i, arr) => {
+        if (i === 0) {
             return true;
         }
-        // We will evaluate elements A,B,C
-        const a = arr[i-2]
-        const b = arr[i-1]
-        const c = curr
-        console.log('\t\t\tEvaluating ', a, b, c)
-        const isValid = (x,y) => y < x && (x - y) <= 3
-        if (isValid(a,b) && isValid(b,c)) {
-            console.log('\t\t\t\tValid')
-            return true
-        }
-        if (! isDampenerAvailable) {
-            console.log('\t\t\t\tInvalid, no dampener available')
-            return false
-        }
-        console.log('\t\t\t\tDampener available')
-
-        if (isValid(a,c)) {
-            console.log('\t\t\t\tIs valid, with dampener, using it.')
-            isDampenerAvailable = false
-            return true
-        }
-        console.log('\t\t\t\tInvalid, even with dampener')
-        return false
+        const prev = arr[i-1]
+        return compareFn(prev, curr)
     })
 }
