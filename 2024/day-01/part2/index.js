@@ -24,12 +24,10 @@ input.trim().split('\n')
         }
     });
 
-listA.sort()
-listB.sort()
+const listASimalarityScores = listA.map((x) => {
+    const occurences = listB.filter(y => y === x).length;
+    return occurences * x;
+})
 
-const pairs = listA.map((x, i) => [x, listB[i]]);
-
-const distancesPerPair = pairs.map(([x, y]) => Math.abs(x - y));
-
-// console.log(listA.length, listB.length)
-console.log(distancesPerPair.reduce((acc, x) => acc + x, 0));
+const totalSimilarityScore = listASimalarityScores.reduce((acc, x) => acc + x, 0);
+console.log({totalSimilarityScore});
